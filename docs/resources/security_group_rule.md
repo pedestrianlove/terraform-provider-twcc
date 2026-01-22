@@ -12,6 +12,8 @@ Provides a security group rule.
 
 ## Example Usage
 
+### Using with VCS-associated security group (via data source)
+
 ```hcl
 data "twcc_project" "testProject" {
     name = "ENT108079"
@@ -38,6 +40,35 @@ resource "twcc_security_group_rule" "site1_sg_rule1" {
     remote_ip_prefix = "192.168.0.0/16"
     port_range_min = 8000
     port_range_max = 8010
+}
+```
+
+### Using with standalone security group (via resource)
+
+```hcl
+data "twcc_project" "testProject" {
+    name = "ENT108079"
+    platform = "openstack-taichung-default-2"
+}
+
+# Create a standalone security group
+resource "twcc_security_group" "app_sg" {
+    name = "application-sg"
+    platform = data.twcc_project.testProject.platform
+    project = data.twcc_project.testProject.id
+    description = "Security group for application servers"
+}
+
+# Add rules to the standalone security group
+resource "twcc_security_group_rule" "app_ingress" {
+    platform = data.twcc_project.testProject.platform
+    project = data.twcc_project.testProject.id
+    security_group = twcc_security_group.app_sg.id
+    direction = "ingress"
+    protocol = "tcp"
+    remote_ip_prefix = "10.0.0.0/8"
+    port_range_min = 8080
+    port_range_max = 8080
 }
 ```
 
